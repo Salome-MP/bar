@@ -122,7 +122,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               Hola, {user?.first_name}
             </h1>
           </div>
-          <div className="flex items-center gap-2 text-sm text-gray-400">
+          <div className="hidden sm:flex items-center gap-2 text-sm text-gray-400">
             <Calendar className="w-4 h-4" />
             {new Date().toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long' })}
           </div>

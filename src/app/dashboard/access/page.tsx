@@ -457,7 +457,90 @@ export default function QrScannerPage() {
                   </p>
                 </div>
               ) : (
-                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                <>
+                {/* Mobile: card layout */}
+                <div className="md:hidden space-y-2">
+                  {filteredAttendees.map((a) => {
+                    const name = a.form_data?._attendee_name || a.form_data?.['Nombre completo'] || a.form_data?.['Nombre'] || '-';
+                    const email = a.form_data?._attendee_email || a.form_data?.['Email'] || a.form_data?.['Correo'] || '-';
+                    const hasOrder = a.order_items && a.order_items.length > 0;
+                    const isExpanded = expandedAttendee === a.id;
+                    return (
+                      <div
+                        key={a.id}
+                        className={`bg-white rounded-xl shadow-sm border border-gray-100 p-4 ${hasOrder ? 'cursor-pointer' : ''}`}
+                        onClick={() => hasOrder && setExpandedAttendee(isExpanded ? null : a.id)}
+                      >
+                        <div className="flex items-center justify-between mb-1">
+                          <div className="flex items-center gap-2 min-w-0">
+                            <span className="font-medium text-gray-900 text-sm truncate">{name}</span>
+                            {hasOrder && (() => {
+                              const allDelivered = a.order_items.every(oi => oi.delivered);
+                              const someDelivered = a.order_items.some(oi => oi.delivered);
+                              return (
+                                <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-xs font-medium shrink-0 ${
+                                  allDelivered
+                                    ? 'text-green-600 bg-green-50'
+                                    : someDelivered
+                                    ? 'text-amber-600 bg-amber-50'
+                                    : 'text-blue-600 bg-blue-50'
+                                }`}>
+                                  <ShoppingBag className="w-3 h-3" />
+                                  {allDelivered ? 'Entregado' : someDelivered ? 'Parcial' : 'Pedido'}
+                                </span>
+                              );
+                            })()}
+                          </div>
+                          {a.checked_in ? (
+                            <span className="inline-flex items-center gap-1 text-green-700 bg-green-50 px-2 py-0.5 rounded-lg text-xs font-medium shrink-0">
+                              <CheckCircle2 className="w-3 h-3" /> Ingreso
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 text-amber-700 bg-amber-50 px-2 py-0.5 rounded-lg text-xs font-medium shrink-0">
+                              <AlertTriangle className="w-3 h-3" /> Pendiente
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-xs text-gray-500 truncate">{email}</p>
+                        {a.checked_in_at && (
+                          <p className="text-xs text-gray-400 mt-0.5">
+                            Check-in: {new Date(a.checked_in_at).toLocaleString('es-AR')}
+                          </p>
+                        )}
+                        {isExpanded && hasOrder && (
+                          <div className="mt-3 bg-gray-50 rounded-lg p-3 text-xs" onClick={(e) => e.stopPropagation()}>
+                            <p className="font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Pedido anticipado</p>
+                            {a.order_items.map((item) => (
+                              <div key={item.id} className="flex items-center justify-between py-1 text-gray-600">
+                                <span className={item.delivered ? 'line-through text-gray-400' : ''}>
+                                  {item.quantity}x {item.name}
+                                  <span className="ml-1 font-medium">${(item.unit_price * item.quantity).toFixed(2)}</span>
+                                </span>
+                                <button
+                                  onClick={() => toggleDeliver(item.id)}
+                                  className={`px-2.5 py-1 rounded-lg text-xs font-medium transition ${
+                                    item.delivered
+                                      ? 'bg-green-100 text-green-700'
+                                      : 'bg-[#0f172a] text-white hover:bg-[#1e293b]'
+                                  }`}
+                                >
+                                  {item.delivered ? 'Entregado' : 'Entregar'}
+                                </button>
+                              </div>
+                            ))}
+                            <div className="flex justify-between pt-1.5 mt-1.5 border-t border-gray-200 font-bold text-gray-900">
+                              <span>Total pedido</span>
+                              <span>${a.order_total.toFixed(2)}</span>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Desktop: table layout */}
+                <div className="hidden md:block bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="bg-gray-50 border-b border-gray-100">
@@ -499,7 +582,6 @@ export default function QrScannerPage() {
                                   );
                                 })()}
                               </div>
-                              {/* Expanded order details */}
                               {isExpanded && hasOrder && (
                                 <div className="mt-2 bg-gray-50 rounded-lg p-3 text-xs" onClick={(e) => e.stopPropagation()}>
                                   <p className="font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Pedido anticipado</p>
@@ -551,6 +633,7 @@ export default function QrScannerPage() {
                     </tbody>
                   </table>
                 </div>
+                </>
               )}
             </div>
           )}
