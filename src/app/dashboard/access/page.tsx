@@ -208,16 +208,16 @@ export default function QrScannerPage() {
     : attendees;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 min-w-0 overflow-x-hidden">
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-bold text-[#0f172a]">Control de Acceso</h2>
       </div>
 
       {/* Event selector */}
-      <div className="bg-white rounded-2xl shadow-sm p-5 border border-gray-100 space-y-4">
+      <div className="bg-white rounded-2xl shadow-sm p-4 sm:p-5 border border-gray-100 space-y-4">
         <div>
           <label className="block text-sm font-medium text-gray-900 mb-2">Evento</label>
-          <div className="relative max-w-md">
+          <div className="relative sm:max-w-md">
             <select
               value={selectedEvent}
               onChange={(e) => { setSelectedEvent(e.target.value); setResult(null); setAttendees([]); }}

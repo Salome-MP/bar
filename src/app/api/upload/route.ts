@@ -1,13 +1,16 @@
 import { NextRequest } from 'next/server'
 import { requireRole } from '@/lib/auth'
-import { writeFile, mkdir } from 'fs/promises'
-import path from 'path'
 import { v4 as uuid } from 'uuid'
 
 const ALLOWED_IMAGE = ['image/jpeg', 'image/png', 'image/webp', 'image/gif']
 const ALLOWED_VIDEO = ['video/mp4', 'video/webm']
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024 // 5MB
 const MAX_VIDEO_SIZE = 50 * 1024 * 1024 // 50MB
+
+const BUNNY_STORAGE_ZONE = process.env.BUNNY_STORAGE_ZONE!
+const BUNNY_STORAGE_API_KEY = process.env.BUNNY_STORAGE_API_KEY!
+const BUNNY_CDN_HOSTNAME = process.env.BUNNY_CDN_HOSTNAME!
+const BUNNY_BASE_PATH = process.env.BUNNY_BASE_PATH || 'appbar'
 
 export async function POST(request: NextRequest) {
   const authResult = await requireRole(request, 'BAR_ADMIN', 'SUPER_ADMIN')
@@ -35,15 +38,33 @@ export async function POST(request: NextRequest) {
 
     const ext = file.name.split('.').pop() || (isImage ? 'jpg' : 'mp4')
     const filename = `${uuid()}_${Date.now()}.${ext}`
-    const uploadsDir = path.join(process.cwd(), 'public', 'uploads')
-
-    await mkdir(uploadsDir, { recursive: true })
+    const bunnyPath = `${BUNNY_BASE_PATH}/${filename}`
 
     const buffer = Buffer.from(await file.arrayBuffer())
-    await writeFile(path.join(uploadsDir, filename), buffer)
+
+    // Upload to Bunny Storage
+    const bunnyRes = await fetch(
+      `https://storage.bunnycdn.com/${BUNNY_STORAGE_ZONE}/${bunnyPath}`,
+      {
+        method: 'PUT',
+        headers: {
+          'AccessKey': BUNNY_STORAGE_API_KEY,
+          'Content-Type': 'application/octet-stream',
+        },
+        body: buffer,
+      }
+    )
+
+    if (!bunnyRes.ok) {
+      const errorText = await bunnyRes.text()
+      console.error('Bunny upload error:', bunnyRes.status, errorText)
+      return Response.json({ detail: 'Error al subir archivo al CDN' }, { status: 500 })
+    }
+
+    const cdnUrl = `https://${BUNNY_CDN_HOSTNAME}/${bunnyPath}`
 
     return Response.json({
-      url: `/uploads/${filename}`,
+      url: cdnUrl,
       type: isImage ? 'IMAGE' : 'VIDEO',
     })
   } catch (error) {

@@ -6,6 +6,14 @@ const nextConfig: NextConfig = {
       bodySizeLimit: '10mb',
     },
   },
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'codeauni2.b-cdn.net',
+      },
+    ],
+  },
 };
 
 export default nextConfig;

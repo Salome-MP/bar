@@ -1,7 +1,8 @@
 {
   "permissions": {
     "allow": [
-      "Bash(npx next:*)"
+      "Bash(npx next:*)",
+      "Bash(grep -r \"bunny\\\\|BUNNY\" \"D:\\\\app-bar\\\\next-app\" --include=\"*.ts\" --include=\"*.tsx\" --include=\"*.js\" --include=\"*.jsx\" --include=\".env*\" 2>/dev/null | head -20)"
     ]
   }
 }
